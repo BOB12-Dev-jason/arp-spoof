@@ -29,18 +29,18 @@ struct IpHeader {
 	// IP
 	uint8_t ip_v_hl; // ip Version and Header Length
 	uint8_t ip_tos; // ip type of service
-	uint8_t ip_total_length[2]; // ip total length, 2byte
-	uint8_t ip_id[2]; // ip Identification, 2byte
-	uint8_t ip_flag_frag[2]; // ip flags, fragment offset
+	uint16_t ip_total_length; // ip total length, 2byte
+	uint16_t ip_id; // ip Identification, 2byte
+	uint16_t ip_flag_frag; // ip flags, fragment offset, 2byte
 	uint8_t ip_ttl; // ip TTL
 
 	uint8_t ip_proto_type; // ip protocol type
 
-	uint8_t ip_h_ck[2]; // ip header checksum
+	uint16_t ip_h_ck; // ip header checksum, 2byte
 
-	uint8_t ip_src[4]; // source ip address
-	uint8_t ip_dst[4]; // destination ip address
-
+	uint32_t ip_src; // source ip address
+	uint32_t ip_dst; // destination ip address
+	
 };
 
 void usage();
@@ -157,10 +157,12 @@ int main(int argc, char* argv[]) {
 			if ((ntohs(capturePkt->eth_.type_) == 0x0806)) { // arp 패킷인 경우
 				captureArpPkt = reinterpret_cast<EthArpPacket*>(capturePkt);
 				// printArpInfo(*captureArpPkt);
-				// sender가 arp request를 하면 target이 풀림.
+				
 				printf("sip: %s\n", std::string(Ip(ntohl(captureArpPkt->arp_.sip_))).c_str());
 				printf("sender ip: %s\n", std::string(sender_ip).c_str());
 				printf("target ip: %s\n", std::string(target_ip).c_str());
+				
+				// sender가 arp request를 하면 target이 풀림.
 				if (Ip(ntohl(captureArpPkt->arp_.sip_)) == sender_ip) {
 					puts("resend arp reply to target");
 					for (int k = 0; k < 3; k++)
@@ -173,7 +175,9 @@ int main(int argc, char* argv[]) {
 				}
 
 			}
-			else if (capturePkt->eth_.smac_ == sender_mac && capturePkt->eth_.dmac_ == Mac(my_mac_addr)) { // sender -> target으로 보내는 ip 패킷을 릴레이
+			else if (capturePkt->eth_.smac_ == sender_mac && capturePkt->eth_.dmac_ == Mac(my_mac_addr) ) { // sender -> target으로 보내는 ip 패킷을 릴레이
+				// && Ip(ntohl(capturePkt->ip_dst)) == target_ip
+				printf("ip_dst: %s\n", std::string(Ip(ntohl(capturePkt->ip_dst))).c_str());
 				capturePkt->eth_.smac_ = Mac(my_mac_addr);
 				capturePkt->eth_.dmac_ = target_mac;
 
@@ -184,7 +188,9 @@ int main(int argc, char* argv[]) {
 				}
 
 			}
-			else if (capturePkt->eth_.smac_ == target_mac && capturePkt->eth_.dmac_ == Mac(my_mac_addr)) { // target -> sender로 보내는 ip 패킷을 릴레이
+			else if (capturePkt->eth_.smac_ == target_mac && capturePkt->eth_.dmac_ == Mac(my_mac_addr) ) { // target -> sender로 보내는 ip 패킷을 릴레이
+				// && Ip(ntohl(capturePkt->ip_dst)) == sender_ip
+				printf("ip_dst: %s\n", std::string(Ip(ntohl(capturePkt->ip_dst))).c_str());
 				capturePkt->eth_.smac_ = Mac(my_mac_addr);
 				capturePkt->eth_.dmac_ = sender_mac;
 
