@@ -405,7 +405,7 @@ void printArpInfo(EthArpPacket pkt) {
 }
 
 void usage() {
-	printf("syntax: send-arp-test <interface> <sender-ip> <target-ip>\n");
-	printf("sample: send-arp-test wlan0 192.168.0.31 192.168.0.1\n");
+	printf("syntax: arp-spoof <interface> <sender-ip> <target-ip>\n");
+	printf("sample: arp-spoof wlan0 192.168.0.31 192.168.0.1\n");
 }
 
